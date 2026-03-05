@@ -3,7 +3,7 @@ const Stripe = require("stripe");
 const ALLOWED_ORIGINS = new Set([
   "https://mewseum.webflow.io",
   "http://localhost:8888",
-  // If you have a custom domain later, add it here:
+  // add your custom domain later:
   // "https://yourdomain.com",
 ]);
 
@@ -25,11 +25,7 @@ exports.handler = async (event) => {
 
   // ✅ Only allow POST
   if (event.httpMethod !== "POST") {
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: "Method not allowed" }),
-    };
+    return { statusCode: 405, headers, body: JSON.stringify({ error: "Method not allowed" }) };
   }
 
   try {
@@ -51,19 +47,21 @@ exports.handler = async (event) => {
     const quantity = body.quantity || 1;
 
     if (!priceId) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: "Missing priceId" }),
-      };
+      return { statusCode: 400, headers, body: JSON.stringify({ error: "Missing priceId" }) };
     }
 
-    // ✅ HERE is the only change you asked for: add sizes to Checkout
     const session = await stripe.checkout.sessions.create({
       ui_mode: "embedded",
       mode: "payment",
       line_items: [{ price: priceId, quantity }],
 
+      // ✅ Phone number
+      phone_number_collection: { enabled: true },
+
+      // ✅ Address/location (no country restriction like shipping_address_collection)
+      billing_address_collection: "required",
+
+      // ✅ Size dropdown
       custom_fields: [
         {
           key: "size",
@@ -92,10 +90,6 @@ exports.handler = async (event) => {
       body: JSON.stringify({ clientSecret: session.client_secret }),
     };
   } catch (err) {
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: err.message || "Server error" }),
-    };
+    return { statusCode: 500, headers, body: JSON.stringify({ error: err.message || "Server error" }) };
   }
 };
