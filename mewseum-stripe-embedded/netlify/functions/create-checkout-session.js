@@ -55,14 +55,31 @@ exports.handler = async (event) => {
       mode: "payment",
       line_items: [{ price: priceId, quantity }],
 
+      // ✅ Email is collected by Stripe Checkout by default
+
       // ✅ Phone number
       phone_number_collection: { enabled: true },
 
-      // ✅ Address/location (no country restriction like shipping_address_collection)
-      billing_address_collection: "required",
+      // ✅ Shipping address (this is what shows the full shipping form)
+      // NOTE: Stripe requires allowed countries. Add/remove as you want.
+      shipping_address_collection: {
+        allowed_countries: [
+          "MA", "FR", "CH", "BE", "DE", "ES", "IT", "NL", "GB", "PT",
+          "IE", "SE", "NO", "DK", "FI", "AT", "LU",
+          "US", "CA",
+          "AE", "SA", "QA", "KW",
+        ],
+      },
 
-      // ✅ Size dropdown
+      // ✅ Extra fields: Full name + Size
       custom_fields: [
+        {
+          key: "full_name",
+          label: { type: "custom", custom: "Full name" },
+          type: "text",
+          optional: false,
+          text: { minimum_length: 2, maximum_length: 80 },
+        },
         {
           key: "size",
           label: { type: "custom", custom: "T-shirt size" },
