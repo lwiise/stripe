@@ -46,3 +46,21 @@ exports.handler = async (event) => {
     return { statusCode: 500, headers, body: JSON.stringify({ error: err.message || "Server error" }) };
   }
 };
+
+custom_fields: [
+  {
+    key: "size",
+    label: { type: "custom", custom: "T-shirt size" },
+    type: "dropdown",
+    dropdown: {
+      options: [
+        { label: "Small (S)", value: "S" },
+        { label: "Medium (M)", value: "M" },
+        { label: "Large (L)", value: "L" },
+        { label: "XL", value: "XL" }
+      ],
+      default_value: "M"
+    },
+    optional: false
+  }
+],
