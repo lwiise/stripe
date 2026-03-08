@@ -2,6 +2,7 @@ const Stripe = require("stripe");
 
 const ALLOWED_ORIGINS = new Set([
   "https://mewseum.webflow.io",
+  "https://mewseum.ch/",
   "http://localhost:8888",
   // add your custom domain later:
   // "https://yourdomain.com",
