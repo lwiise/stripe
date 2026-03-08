@@ -2,9 +2,8 @@ const Stripe = require("stripe");
 
 const ALLOWED_ORIGINS = new Set([
   "https://mewseum.webflow.io",
-  "https://mewseum.ch",
   "http://localhost:8888",
-  // add your custom domain later:
+  "https://mewseum.ch/",
   // "https://yourdomain.com",
 ]);
 
@@ -19,12 +18,10 @@ exports.handler = async (event) => {
     "Content-Type": "application/json",
   };
 
-  // ✅ CORS preflight
   if (event.httpMethod === "OPTIONS") {
     return { statusCode: 204, headers, body: "" };
   }
 
-  // ✅ Only allow POST
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, headers, body: JSON.stringify({ error: "Method not allowed" }) };
   }
@@ -35,9 +32,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 500,
         headers,
-        body: JSON.stringify({
-          error: "STRIPE_SECRET_KEY must be a Stripe secret key (sk_live_... or sk_test_...)",
-        }),
+        body: JSON.stringify({ error: "Missing/invalid STRIPE_SECRET_KEY (must start with sk_)" }),
       };
     }
 
@@ -56,23 +51,15 @@ exports.handler = async (event) => {
       mode: "payment",
       line_items: [{ price: priceId, quantity }],
 
-      // ✅ Email is collected by Stripe Checkout by default
-
-      // ✅ Phone number
+      // Email is collected by Checkout by default
       phone_number_collection: { enabled: true },
 
-      // ✅ Shipping address (this is what shows the full shipping form)
-      // NOTE: Stripe requires allowed countries. Add/remove as you want.
+      // Shipping address (Stripe requires allowed countries)
       shipping_address_collection: {
-        allowed_countries: [
-          "MA", "FR", "CH", "BE", "DE", "ES", "IT", "NL", "GB", "PT",
-          "IE", "SE", "NO", "DK", "FI", "AT", "LU",
-          "US", "CA",
-          "AE", "SA", "QA", "KW",
-        ],
+        allowed_countries: ["MA", "FR", "CH", "BE", "DE", "ES", "IT", "NL", "GB", "PT", "US", "CA"],
       },
 
-      // ✅ Extra fields: Full name + Size
+      // Full name + size
       custom_fields: [
         {
           key: "full_name",
@@ -102,11 +89,7 @@ exports.handler = async (event) => {
       redirect_on_completion: "if_required",
     });
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ clientSecret: session.client_secret }),
-    };
+    return { statusCode: 200, headers, body: JSON.stringify({ clientSecret: session.client_secret }) };
   } catch (err) {
     return { statusCode: 500, headers, body: JSON.stringify({ error: err.message || "Server error" }) };
   }
