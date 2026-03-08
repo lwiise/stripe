@@ -2,14 +2,14 @@ const Stripe = require("stripe");
 
 const ALLOWED_ORIGINS = new Set([
   "https://mewseum.webflow.io",
+  "https://mewseum.ch",
+  "https://www.mewseum.ch", // keep this in case www is used anywhere
   "http://localhost:8888",
-  "https://mewseum.ch/",
-  // "https://yourdomain.com",
 ]);
 
 exports.handler = async (event) => {
   const origin = event.headers?.origin || event.headers?.Origin || "";
-  const allowOrigin = ALLOWED_ORIGINS.has(origin) ? origin : "https://mewseum.webflow.io";
+  const allowOrigin = ALLOWED_ORIGINS.has(origin) ? origin : "https://mewseum.ch";
 
   const headers = {
     "Access-Control-Allow-Origin": allowOrigin,
@@ -18,6 +18,7 @@ exports.handler = async (event) => {
     "Content-Type": "application/json",
   };
 
+  // CORS preflight
   if (event.httpMethod === "OPTIONS") {
     return { statusCode: 204, headers, body: "" };
   }
@@ -32,7 +33,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 500,
         headers,
-        body: JSON.stringify({ error: "Missing/invalid STRIPE_SECRET_KEY (must start with sk_)" }),
+        body: JSON.stringify({ error: "STRIPE_SECRET_KEY must be a Stripe secret key (sk_...)" }),
       };
     }
 
@@ -56,7 +57,7 @@ exports.handler = async (event) => {
 
       // Shipping address (Stripe requires allowed countries)
       shipping_address_collection: {
-        allowed_countries: ["MA", "FR", "CH", "BE", "DE", "ES", "IT", "NL", "GB", "PT", "US", "CA"],
+        allowed_countries: ["CH", "FR", "MA", "BE", "DE", "ES", "IT", "NL", "GB", "PT", "US", "CA"],
       },
 
       // Full name + size
@@ -85,6 +86,7 @@ exports.handler = async (event) => {
         },
       ],
 
+      // ✅ Return to the SAME domain that opened Checkout
       return_url: `${allowOrigin}/checkout-return?session_id={CHECKOUT_SESSION_ID}`,
       redirect_on_completion: "if_required",
     });
